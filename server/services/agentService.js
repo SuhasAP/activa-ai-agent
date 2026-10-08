@@ -2,6 +2,7 @@ import { analyzeIntentAndPlan } from './geminiService.js';
 import { executeApprovedAction } from './toolRouter.js';
 import { db } from '../data/seedData.js';
 import { executionStore } from '../data/executionStore.js';
+import { createPendingToken } from '../utils/tokenUtils.js';
 
 function slugify(text = '') {
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -48,8 +49,15 @@ export const agentService = {
     const proposedAction = aiDecision.proposedAction;
 
     if (proposedAction && proposedAction.requiresApproval) {
-      const pendingId = `pending-${Date.now()}`;
+      const basePendingId = `pending-${Date.now()}`;
       const actionId = generateActionId(execId, proposedAction.toolName, proposedAction.params);
+      
+      const pendingId = createPendingToken(
+        execId,
+        basePendingId,
+        actionId,
+        proposedAction
+      );
       
       timeline.push({ id: "step-6", status: "warning", message: "⚠ Human approval required for consequential action" });
 

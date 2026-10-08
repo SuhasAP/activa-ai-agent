@@ -47,6 +47,8 @@ function saveToDisk() {
   }
 }
 
+import { parseAndVerifyPendingToken } from '../utils/tokenUtils.js';
+
 // Load initial disk content
 loadFromDisk();
 
@@ -62,7 +64,61 @@ export const executionStore = {
   },
 
   getExecutionById: (id) => {
-    return executionsCache.find(e => e.id === id || e.pendingId === id);
+    if (!id) return undefined;
+    
+    // 1. Search in-memory cache
+    const match = executionsCache.find(e => 
+      e.id === id || 
+      e.pendingId === id || 
+      (e.pendingId && id.startsWith(e.pendingId)) ||
+      (e.pendingId && e.pendingId.startsWith(id))
+    );
+    if (match) return match;
+
+    // 2. Serverless Recovery: Verify HMAC signature and reconstruct pending execution
+    const payload = parseAndVerifyPendingToken(id);
+    if (payload) {
+      const recoveredExec = {
+        id: payload.execId,
+        pendingId: id,
+        actionId: payload.actionId,
+        userGoal: "Agent Goal Execution",
+        intent: "Approved Action Execution",
+        reasoning: "Action details recovered from signed serverless pending token.",
+        status: "AWAITING_APPROVAL",
+        createdAt: new Date(payload.ts).toISOString(),
+        timeline: [
+          { id: "step-1", status: "completed", message: "✓ Goal received & intent understood" },
+          { id: "step-2", status: "completed", message: "✓ Decomposing goal into execution steps" },
+          { id: "step-3", status: "completed", message: "✓ Inspecting tasks, calendar & financial records" },
+          { id: "step-4", status: "completed", message: "✓ Tool selection & deterministic calculations verified" },
+          { id: "step-5", status: "completed", message: "✓ Execution plan generated" },
+          { id: "step-6", status: "warning", message: "⚠ Human approval required for consequential action" }
+        ],
+        planSteps: [],
+        summary: payload.proposedAction?.description || "Pending Action Proposal",
+        requiresApproval: true,
+        approvalCard: {
+          pendingId: id,
+          actionId: payload.actionId,
+          executionId: payload.execId,
+          actionType: payload.proposedAction?.toolName,
+          title: payload.proposedAction?.params?.title || "Consequential Action",
+          description: payload.proposedAction?.description,
+          reason: payload.proposedAction?.reason,
+          params: payload.proposedAction?.params,
+          status: "PENDING"
+        },
+        resultVerification: null,
+        executedActions: []
+      };
+
+      // Save into current instance memory cache
+      executionsCache.push(recoveredExec);
+      return recoveredExec;
+    }
+
+    return undefined;
   },
 
   saveExecution: (execution) => {

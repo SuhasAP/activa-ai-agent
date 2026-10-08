@@ -32,7 +32,7 @@ export function validateApprovalInput(req, res, next) {
     });
   }
 
-  if (pendingId.trim().length > 100) {
+  if (pendingId.trim().length > 2000) {
     return res.status(400).json({
       error: true,
       message: "Invalid pendingId format."

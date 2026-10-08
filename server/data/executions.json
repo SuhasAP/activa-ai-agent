@@ -1,1 +1,74 @@
-[]
+[
+  {
+    "id": "exec-1791492053747-gr0s",
+    "pendingId": "pending-1791492053830_eyJleGVjSWQiOiJleGVjLTE3OTE0OTIwNTM3NDctZ3IwcyIsInBlbmRpbmdJZCI6InBlbmRpbmctMTc5MTQ5MjA1MzgzMCIsImFjdGlvbklkIjoiYWN0aW9uLWV4ZWMtMTc5MTQ5MjA1Mzc0Ny1ncjBzLWNyZWF0ZVJlbWluZGVyLWNvbXBsZXRlLWRibXMtYXNzaWdubWVudCIsInByb3Bvc2VkQWN0aW9uIjp7InRvb2xOYW1lIjoiY3JlYXRlUmVtaW5kZXIiLCJkZXNjcmlwdGlvbiI6IkNyZWF0ZSByZW1pbmRlcjogXCJDb21wbGV0ZSBEQk1TIEFzc2lnbm1lbnRcIiBmb3IgVG9tb3Jyb3cgYXQgNzowMCBQTSIsInJlYXNvbiI6IkVuc3VyZXMgYXNzaWdubWVudCBpcyBjb21wbGV0ZWQgYW5kIHN1Ym1pdHRlZCBiZWZvcmUgdG9tb3Jyb3cgbmlnaHQncyBkZWFkbGluZS4iLCJwYXJhbXMiOnsidGl0bGUiOiJDb21wbGV0ZSBEQk1TIEFzc2lnbm1lbnQiLCJkYXRlVGltZSI6IlRvbW9ycm93IGF0IDc6MDAgUE0ifX0sInRzIjoxNzkxNDkyMDUzODMwfQ_b43319fa7ce17a3ecce7fe0de651a3b537d5cbf18e6ce7f049b6434334651b9d",
+    "actionId": "action-exec-1791492053747-gr0s-createReminder-complete-dbms-assignment",
+    "userGoal": "Agent Goal Execution",
+    "intent": "Approved Action Execution",
+    "reasoning": "Action details recovered from signed serverless pending token.",
+    "status": "COMPLETED",
+    "createdAt": "2026-10-08T20:40:53.830Z",
+    "timeline": [
+      {
+        "id": "step-1",
+        "status": "completed",
+        "message": "✓ Goal received & intent understood"
+      },
+      {
+        "id": "step-2",
+        "status": "completed",
+        "message": "✓ Execution plan generated"
+      },
+      {
+        "id": "step-3",
+        "status": "completed",
+        "message": "✓ Human approval GRANTED by user"
+      },
+      {
+        "id": "step-4",
+        "status": "completed",
+        "message": "✓ Approved action executed: createReminder"
+      },
+      {
+        "id": "step-5",
+        "status": "completed",
+        "message": "✓ Result verified in system store"
+      }
+    ],
+    "planSteps": [],
+    "summary": "Action approved and successfully executed! Create reminder: \"Complete DBMS Assignment\" for Tomorrow at 7:00 PM",
+    "requiresApproval": true,
+    "approvalCard": {
+      "pendingId": "pending-1791492053830_eyJleGVjSWQiOiJleGVjLTE3OTE0OTIwNTM3NDctZ3IwcyIsInBlbmRpbmdJZCI6InBlbmRpbmctMTc5MTQ5MjA1MzgzMCIsImFjdGlvbklkIjoiYWN0aW9uLWV4ZWMtMTc5MTQ5MjA1Mzc0Ny1ncjBzLWNyZWF0ZVJlbWluZGVyLWNvbXBsZXRlLWRibXMtYXNzaWdubWVudCIsInByb3Bvc2VkQWN0aW9uIjp7InRvb2xOYW1lIjoiY3JlYXRlUmVtaW5kZXIiLCJkZXNjcmlwdGlvbiI6IkNyZWF0ZSByZW1pbmRlcjogXCJDb21wbGV0ZSBEQk1TIEFzc2lnbm1lbnRcIiBmb3IgVG9tb3Jyb3cgYXQgNzowMCBQTSIsInJlYXNvbiI6IkVuc3VyZXMgYXNzaWdubWVudCBpcyBjb21wbGV0ZWQgYW5kIHN1Ym1pdHRlZCBiZWZvcmUgdG9tb3Jyb3cgbmlnaHQncyBkZWFkbGluZS4iLCJwYXJhbXMiOnsidGl0bGUiOiJDb21wbGV0ZSBEQk1TIEFzc2lnbm1lbnQiLCJkYXRlVGltZSI6IlRvbW9ycm93IGF0IDc6MDAgUE0ifX0sInRzIjoxNzkxNDkyMDUzODMwfQ_b43319fa7ce17a3ecce7fe0de651a3b537d5cbf18e6ce7f049b6434334651b9d",
+      "actionId": "action-exec-1791492053747-gr0s-createReminder-complete-dbms-assignment",
+      "executionId": "exec-1791492053747-gr0s",
+      "actionType": "createReminder",
+      "title": "Complete DBMS Assignment",
+      "description": "Create reminder: \"Complete DBMS Assignment\" for Tomorrow at 7:00 PM",
+      "reason": "Ensures assignment is completed and submitted before tomorrow night's deadline.",
+      "params": {
+        "title": "Complete DBMS Assignment",
+        "dateTime": "Tomorrow at 7:00 PM"
+      },
+      "status": "EXECUTED"
+    },
+    "resultVerification": {
+      "verified": true,
+      "actionExecuted": "Create reminder: \"Complete DBMS Assignment\" for Tomorrow at 7:00 PM",
+      "whatIDid": [
+        "Prioritized DBMS Assignment 3 (Due Tomorrow)",
+        "Created confirmed reminder: \"Complete DBMS Assignment\"",
+        "Calculated safe spending buffer: ₹350 emergency fund preserved",
+        "Validated calendar slot availability"
+      ],
+      "whatNeedsAttention": [
+        "Pay ₹650 Electricity bill due tomorrow",
+        "Attend DBMS Class at 10:00 AM"
+      ]
+    },
+    "executedActions": [
+      "action-exec-1791492053747-gr0s-createReminder-complete-dbms-assignment"
+    ],
+    "updatedAt": "2026-10-08T20:40:53.832Z"
+  }
+]

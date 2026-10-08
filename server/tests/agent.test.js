@@ -385,3 +385,22 @@ test('S20. Tool parameters are validated cleanly by tool registry', async () => 
   assert.equal(res.success, true);
   assert.equal(res.result.title, "Test Security Task");
 });
+
+test('S21. Pending approval token can be recovered and approved on a fresh cold-start instance', async () => {
+  db.resetStore();
+  const goal = "I have an assignment due tomorrow";
+  const exec = await agentService.processGoal(goal);
+  const pendingId = exec.pendingId;
+
+  // Simulate a cold-start serverless instance by resetting in-memory execution cache
+  executionStore.resetExecutions();
+
+  // Approve action on the fresh instance using the signed pendingId token
+  const approveRes = await agentService.approveAction(pendingId);
+  assert.equal(approveRes.status, 'COMPLETED');
+  assert.ok(approveRes.resultVerification.verified);
+
+  const reminders = db.getReminders();
+  const createdRem = reminders.find(r => r.title.includes('DBMS Assignment'));
+  assert.ok(createdRem, 'Reminder should be created successfully on cold-start instance');
+});
