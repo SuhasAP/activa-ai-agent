@@ -1,0 +1,26 @@
+{
+  "name": "activa-agent",
+  "version": "1.0.0",
+  "description": "ACTIVA - From Intent to Action: AI-Powered Autonomous Agent",
+  "main": "server/server.js",
+  "scripts": {
+    "setup": "npm install && cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm install && npm run build",
+    "start": "node server/server.js",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev": "cd server && npm run dev",
+    "test": "cd server && npm test"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "gemini",
+    "autonomous",
+    "productivity",
+    "activa"
+  ],
+  "author": "PromptWars Hackathon Builder",
+  "license": "MIT",
+  "devDependencies": {}
+}
