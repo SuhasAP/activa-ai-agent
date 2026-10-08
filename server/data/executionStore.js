@@ -42,7 +42,8 @@ function saveToDisk() {
   try {
     fs.writeFileSync(EXECUTIONS_FILE, JSON.stringify(executionsCache, null, 2), 'utf-8');
   } catch (err) {
-    console.error('[executionStore] Error saving executions.json:', err.message);
+    // Graceful warning for read-only serverless filesystems (e.g., Vercel)
+    console.warn('[executionStore] Disk persistence unavailable (operating in-memory):', err.message);
   }
 }
 
