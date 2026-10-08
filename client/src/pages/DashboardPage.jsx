@@ -12,6 +12,8 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingApproval, setIsProcessingApproval] = useState(false);
   const [agentState, setAgentState] = useState(null);
+  const [isHydrating, setIsHydrating] = useState(true);
+  const [hydrationError, setHydrationError] = useState(null);
   
   // Real dashboard metrics
   const [dashboardData, setDashboardData] = useState({
@@ -21,7 +23,11 @@ export default function DashboardPage() {
     reminders: []
   });
 
-  const loadData = async () => {
+  const loadData = async (isMount = false) => {
+    if (isMount) {
+      setIsHydrating(true);
+      setHydrationError(null);
+    }
     try {
       const [tasks, expenseData, remindersData, latestExecution] = await Promise.all([
         api.getTasks(),
@@ -37,16 +43,23 @@ export default function DashboardPage() {
         reminders: Array.isArray(remindersData) ? remindersData : []
       });
 
-      if (latestExecution) {
+      if (latestExecution && latestExecution.id) {
         setAgentState(latestExecution);
       }
     } catch (err) {
       console.error("Failed to load dashboard data from backend", err);
+      if (isMount) {
+        setHydrationError("Failed to restore latest execution state from backend.");
+      }
+    } finally {
+      if (isMount) {
+        setIsHydrating(false);
+      }
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
   }, []);
 
   const handleExecuteGoal = async (goal) => {
@@ -54,7 +67,7 @@ export default function DashboardPage() {
     try {
       const response = await api.executeGoal(goal);
       setAgentState(response);
-      loadData();
+      loadData(false);
     } catch (err) {
       alert(`Agent execution error: ${err.message}`);
     } finally {
@@ -67,7 +80,7 @@ export default function DashboardPage() {
     try {
       const response = await api.approveAction(pendingId);
       setAgentState(response);
-      loadData();
+      loadData(false);
     } catch (err) {
       alert(`Approval error: ${err.message}`);
     } finally {
@@ -80,7 +93,7 @@ export default function DashboardPage() {
     try {
       const response = await api.rejectAction(pendingId);
       setAgentState(response);
-      loadData();
+      loadData(false);
     } catch (err) {
       alert(`Rejection error: ${err.message}`);
     } finally {
@@ -158,8 +171,32 @@ export default function DashboardPage() {
       {/* Goal Input Component */}
       <CommandCenter onExecuteGoal={handleExecuteGoal} isLoading={isLoading} />
 
+      {/* Hydration Loading Indicator */}
+      {isHydrating && (
+        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 mb-8 flex items-center gap-3 text-xs text-slate-400 font-mono animate-pulse">
+          <div className="w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div>
+          <span>Restoring execution state from backend history...</span>
+        </div>
+      )}
+
+      {/* Hydration Error Alert */}
+      {hydrationError && !isHydrating && (
+        <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-4 mb-8 flex items-center justify-between text-xs text-red-300 font-mono">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+            <span>{hydrationError}</span>
+          </div>
+          <button
+            onClick={() => loadData(true)}
+            className="px-3 py-1 bg-red-900/60 hover:bg-red-800 text-white font-bold rounded-lg border border-red-700 transition"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* LATEST MISSION CONTAINER */}
-      {agentState && (
+      {!isHydrating && agentState && (
         <div className="mb-8">
           <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-800">
             <div className="flex items-center gap-3">
@@ -176,22 +213,24 @@ export default function DashboardPage() {
           </div>
 
           {/* Goal Prompt */}
-          <div className="bg-slate-900/90 rounded-xl p-4 mb-6 border border-indigo-500/20">
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">
-              User Goal Input
-            </span>
-            <p className="text-sm font-semibold text-white italic">
-              "{agentState.userGoal}"
-            </p>
-          </div>
+          {agentState.userGoal && (
+            <div className="bg-slate-900/90 rounded-xl p-4 mb-6 border border-indigo-500/20">
+              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">
+                User Goal Input
+              </span>
+              <p className="text-sm font-semibold text-white italic">
+                "{agentState.userGoal}"
+              </p>
+            </div>
+          )}
 
           {/* Agent Activity Timeline */}
-          {agentState.timeline && (
+          {agentState.timeline && agentState.timeline.length > 0 && (
             <ActivityTimeline timeline={agentState.timeline} />
           )}
 
-          {/* Approval Card (if awaiting human approval or executed) */}
-          {(agentState.status === 'AWAITING_APPROVAL' || agentState.requiresApproval) && agentState.approvalCard && (
+          {/* Approval Card (if approvalCard exists) */}
+          {agentState.approvalCard && (
             <ApprovalCard
               cardData={agentState.approvalCard}
               executionStatus={agentState.status}
@@ -202,7 +241,7 @@ export default function DashboardPage() {
           )}
 
           {/* Execution Result (if COMPLETED or CANCELLED or FAILED) */}
-          {agentState.status !== 'AWAITING_APPROVAL' && agentState.resultVerification && (
+          {agentState.status !== 'AWAITING_APPROVAL' && (agentState.resultVerification || agentState.summary) && (
             <ResultCard
               resultVerification={agentState.resultVerification}
               summary={agentState.summary}
@@ -212,7 +251,7 @@ export default function DashboardPage() {
           )}
 
           {/* Structured Execution Plan */}
-          {agentState.planSteps && (
+          {agentState.planSteps && agentState.planSteps.length > 0 && (
             <ExecutionPlan
               intent={agentState.intent}
               reasoning={agentState.reasoning}
@@ -233,3 +272,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

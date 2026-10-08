@@ -404,3 +404,34 @@ test('S21. Pending approval token can be recovered and approved on a fresh cold-
   const createdRem = reminders.find(r => r.title.includes('DBMS Assignment'));
   assert.ok(createdRem, 'Reminder should be created successfully on cold-start instance');
 });
+
+test('S22. Latest execution endpoint supports frontend state hydration across execution states', async () => {
+  db.resetStore();
+  const goal = "I have an assignment due tomorrow, an exam next week, and only ₹2,000 left this month.";
+  
+  // 1. Process goal -> AWAITING_APPROVAL
+  const exec = await agentService.processGoal(goal);
+  let latest = executionStore.getLatestExecution();
+  assert.ok(latest);
+  assert.equal(latest.id, exec.id);
+  assert.equal(latest.status, 'AWAITING_APPROVAL');
+  assert.equal(latest.userGoal, goal);
+  assert.ok(latest.approvalCard);
+  assert.ok(latest.planSteps.length > 0);
+  assert.ok(latest.timeline.length > 0);
+
+  // 2. Approve action -> COMPLETED
+  await agentService.approveAction(exec.pendingId);
+  latest = executionStore.getLatestExecution();
+  assert.equal(latest.status, 'COMPLETED');
+  assert.equal(latest.approvalCard.status, 'EXECUTED');
+  assert.ok(latest.resultVerification.verified);
+
+  // 3. New goal + reject -> CANCELLED
+  const exec2 = await agentService.processGoal("Plan my evening so I can finish assignment");
+  await agentService.rejectAction(exec2.pendingId);
+  latest = executionStore.getLatestExecution();
+  assert.equal(latest.status, 'CANCELLED');
+  assert.equal(latest.approvalCard.status, 'REJECTED');
+});
+
