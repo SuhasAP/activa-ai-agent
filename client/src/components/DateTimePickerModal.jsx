@@ -2,6 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, X, AlertCircle, Check, Bell, Shield } from 'lucide-react';
 
 export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder }) {
+  const today = new Date();
+  
+  // State (top-level hooks)
+  const [title, setTitle] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
+  const [currentMonth, setCurrentMonth] = useState(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+  
+  const [hour, setHour] = useState('07');
+  const [minute, setMinute] = useState('00');
+  const [ampm, setAmPm] = useState('PM');
+  
+  const [errorMessage, setErrorMessage] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -14,20 +28,6 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
-
-  const today = new Date();
-  
-  // State
-  const [title, setTitle] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
-  const [currentMonth, setCurrentMonth] = useState(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
-  
-  const [hour, setHour] = useState('07');
-  const [minute, setMinute] = useState('00');
-  const [ampm, setAmPm] = useState('PM');
-  
-  const [errorMessage, setErrorMessage] = useState('');
-  const [duplicateWarning, setDuplicateWarning] = useState(null);
 
   // Month Navigation
   const prevMonth = () => {
