@@ -66,18 +66,22 @@ export const executionStore = {
   getExecutionById: (id) => {
     if (!id) return undefined;
     
-    // 1. Search in-memory cache
+    // 1. Search in-memory cache for exact match on id or pendingId
     const match = executionsCache.find(e => 
       e.id === id || 
-      e.pendingId === id || 
-      (e.pendingId && id.startsWith(e.pendingId)) ||
-      (e.pendingId && e.pendingId.startsWith(id))
+      e.pendingId === id
     );
     if (match) return match;
 
-    // 2. Serverless Recovery: Verify HMAC signature and reconstruct pending execution
+    // 2. Serverless Recovery & Signature Verification: Verify HMAC signature and reconstruct pending execution
     const payload = parseAndVerifyPendingToken(id);
     if (payload) {
+      const existing = executionsCache.find(e => 
+        e.id === payload.execId || 
+        e.pendingId === id || 
+        (e.pendingId && payload.pendingId && e.pendingId.startsWith(payload.pendingId))
+      );
+      if (existing) return existing;
       const recoveredExec = {
         id: payload.execId,
         pendingId: id,

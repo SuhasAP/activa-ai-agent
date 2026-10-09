@@ -54,7 +54,12 @@ export default function CommandCenter({ onExecuteGoal, isLoading }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
+            <label htmlFor="goal-input" className="sr-only">
+              Tell ACTIVA what you want to accomplish
+            </label>
             <textarea
+              id="goal-input"
+              aria-label="User Goal Input"
               value={goalInput}
               onChange={(e) => setGoalInput(e.target.value)}
               placeholder="Tell ACTIVA what you want to accomplish... (e.g., Organize my deadlines and protect my budget)"
@@ -66,6 +71,7 @@ export default function CommandCenter({ onExecuteGoal, isLoading }) {
             <div className="flex justify-end mt-3">
               <button
                 type="submit"
+                aria-label="Plan and execute goal"
                 disabled={!goalInput.trim() || isLoading}
                 className="flex items-center gap-2.5 px-6 py-3 bg-gradient-to-r from-indigo-600 via-cyan-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-[0.99]"
               >

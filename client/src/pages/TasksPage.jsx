@@ -101,6 +101,7 @@ export default function TasksPage() {
               <div className="flex items-start gap-4">
                 <button
                   onClick={() => handleToggleComplete(task)}
+                  aria-label={`Mark task '${task.title}' as ${task.completed ? 'incomplete' : 'complete'}`}
                   className={`mt-1 w-5 h-5 rounded-md flex items-center justify-center border transition ${
                     task.completed
                       ? 'bg-emerald-500 border-emerald-500 text-slate-950'
@@ -117,7 +118,7 @@ export default function TasksPage() {
                   {task.description && (
                     <p className="text-xs text-slate-400 mt-1">{task.description}</p>
                   )}
-                  <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-400">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <span>Due: {task.dueDateLabel || task.dueDate}</span>
@@ -139,12 +140,18 @@ export default function TasksPage() {
       {/* Modal for creating task */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="glass-card rounded-2xl p-6 border border-slate-700 max-w-md w-full">
-            <h3 className="text-lg font-bold text-white mb-4">Add New Task</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-task-modal-title"
+            className="glass-card rounded-2xl p-6 border border-slate-700 max-w-md w-full"
+          >
+            <h3 id="add-task-modal-title" className="text-lg font-bold text-white mb-4">Add New Task</h3>
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Title</label>
+                <label htmlFor="new-task-title" className="block text-xs font-semibold text-slate-300 mb-1">Title</label>
                 <input
+                  id="new-task-title"
                   type="text"
                   required
                   value={newTask.title}
@@ -154,8 +161,9 @@ export default function TasksPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+                <label htmlFor="new-task-desc" className="block text-xs font-semibold text-slate-300 mb-1">Description</label>
                 <textarea
+                  id="new-task-desc"
                   value={newTask.description}
                   onChange={e => setNewTask({ ...newTask, description: e.target.value })}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-cyan-500"
@@ -165,8 +173,9 @@ export default function TasksPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Priority</label>
+                  <label htmlFor="new-task-priority" className="block text-xs font-semibold text-slate-300 mb-1">Priority</label>
                   <select
+                    id="new-task-priority"
                     value={newTask.priority}
                     onChange={e => setNewTask({ ...newTask, priority: e.target.value })}
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-cyan-500"
@@ -177,8 +186,9 @@ export default function TasksPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Due Date</label>
+                  <label htmlFor="new-task-duedate" className="block text-xs font-semibold text-slate-300 mb-1">Due Date</label>
                   <input
+                    id="new-task-duedate"
                     type="date"
                     value={newTask.dueDate}
                     onChange={e => setNewTask({ ...newTask, dueDate: e.target.value })}
@@ -190,13 +200,13 @@ export default function TasksPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white bg-slate-800"
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500"
+                  className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition"
                 >
                   Create Task
                 </button>

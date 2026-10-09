@@ -2,7 +2,7 @@ import { analyzeIntentAndPlan } from './geminiService.js';
 import { executeApprovedAction } from './toolRouter.js';
 import { db } from '../data/seedData.js';
 import { executionStore } from '../data/executionStore.js';
-import { createPendingToken } from '../utils/tokenUtils.js';
+import { createPendingToken, parseAndVerifyPendingToken } from '../utils/tokenUtils.js';
 
 function slugify(text = '') {
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -191,6 +191,22 @@ export const agentService = {
    * Handle User Approval with Idempotency & Failure Safety
    */
   async approveAction(pendingId) {
+    if (!pendingId || typeof pendingId !== 'string') {
+      const err = new Error("pendingId is required for approval.");
+      err.status = 400;
+      throw err;
+    }
+
+    // Verify token signature if token is formatted as a signed token
+    if (pendingId.includes('.') || pendingId.includes('_')) {
+      const verifiedPayload = parseAndVerifyPendingToken(pendingId);
+      if (!verifiedPayload) {
+        const err = new Error("Invalid, expired, or tampered approval token.");
+        err.status = 403;
+        throw err;
+      }
+    }
+
     const existingExec = executionStore.getExecutionById(pendingId);
 
     if (!existingExec) {
@@ -225,9 +241,13 @@ export const agentService = {
       description: approvalCard?.description
     };
 
-    // Idempotency check: If already executed or status is COMPLETED
-    if (existingExec.status === 'COMPLETED' || (actionId && executionStore.isActionExecuted(actionId))) {
-      console.log(`[Idempotency] Action '${actionId}' already executed. Returning existing result.`);
+    // Idempotency & Concurrency check: If already executed, completed, or currently executing
+    if (
+      existingExec.status === 'COMPLETED' || 
+      existingExec.status === 'EXECUTING' || 
+      (actionId && executionStore.isActionExecuted(actionId))
+    ) {
+      console.log(`[Idempotency] Action '${actionId}' already executed or executing. Returning existing result.`);
       return {
         success: true,
         alreadyExecuted: true,
@@ -240,6 +260,9 @@ export const agentService = {
         }
       };
     }
+
+    // Lock state during execution to handle concurrent requests safely
+    existingExec.status = 'EXECUTING';
 
     // Execute the backend tool action
     let executionResult;
@@ -346,6 +369,22 @@ export const agentService = {
    * Handle User Rejection of Pending Action
    */
   async rejectAction(pendingId) {
+    if (!pendingId || typeof pendingId !== 'string') {
+      const err = new Error("pendingId is required for rejection.");
+      err.status = 400;
+      throw err;
+    }
+
+    // Verify token signature if token is formatted as a signed token
+    if (pendingId.includes('.') || pendingId.includes('_')) {
+      const verifiedPayload = parseAndVerifyPendingToken(pendingId);
+      if (!verifiedPayload) {
+        const err = new Error("Invalid, expired, or tampered approval token.");
+        err.status = 403;
+        throw err;
+      }
+    }
+
     const existingExec = executionStore.getExecutionById(pendingId);
     if (!existingExec) {
       const err = new Error(`Pending approval with ID '${pendingId}' not found.`);

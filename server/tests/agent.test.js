@@ -435,3 +435,91 @@ test('S22. Latest execution endpoint supports frontend state hydration across ex
   assert.equal(latest.approvalCard.status, 'REJECTED');
 });
 
+test('S23. Partial-prefix match attempt for in-memory pendingId is rejected', async () => {
+  db.resetStore();
+  const exec = await agentService.processGoal("I have an assignment due tomorrow");
+  const truncatedId = exec.pendingId.substring(0, 10); // e.g. "pending-17"
+  
+  await assert.rejects(
+    async () => { await agentService.approveAction(truncatedId); },
+    (err) => err.message.includes('not found') || err.message.includes('Invalid')
+  );
+});
+
+test('S24. Tampered HMAC signature in pendingId token is rejected', async () => {
+  db.resetStore();
+  const exec = await agentService.processGoal("I have an assignment due tomorrow");
+  const tamperedToken = exec.pendingId.slice(0, -6) + '000000';
+  
+  await assert.rejects(
+    async () => { await agentService.approveAction(tamperedToken); },
+    (err) => err.message.includes('Invalid') || err.message.includes('not found')
+  );
+});
+
+test('S25. Expired approval token (>24h old) is rejected', async () => {
+  db.resetStore();
+  const crypto = await import('crypto');
+  const secret = process.env.SERVER_SECRET || 'activa-dev-local-hmac-secret-key-32chars';
+  
+  const expiredPayload = {
+    execId: 'exec-expired-999',
+    pendingId: 'pending-expired',
+    actionId: 'action-expired',
+    proposedAction: { toolName: 'createReminder', params: { title: 'Expired Rem' } },
+    ts: Date.now() - (25 * 60 * 60 * 1000) // 25 hours ago
+  };
+
+  const payloadB64 = Buffer.from(JSON.stringify(expiredPayload)).toString('base64url');
+  const hmac = crypto.createHmac('sha256', secret).update(payloadB64).digest('hex');
+  const expiredToken = `pending-expired.${payloadB64}.${hmac}`;
+
+  await assert.rejects(
+    async () => { await agentService.approveAction(expiredToken); },
+    (err) => err.message.includes('Invalid') || err.message.includes('not found')
+  );
+});
+
+test('S26. Replayed approval on completed action returns idempotent response without re-executing', async () => {
+  db.resetStore();
+  const exec = await agentService.processGoal("I have an assignment due tomorrow");
+  
+  const res1 = await agentService.approveAction(exec.pendingId);
+  assert.equal(res1.status, 'COMPLETED');
+
+  const res2 = await agentService.approveAction(exec.pendingId);
+  assert.equal(res2.alreadyExecuted, true);
+  assert.equal(res2.status, 'COMPLETED');
+});
+
+test('S27. Concurrent approval requests execute action at most once', async () => {
+  db.resetStore();
+  const exec = await agentService.processGoal("I have an assignment due tomorrow");
+  const countBefore = db.getReminders().length;
+
+  const [res1, res2] = await Promise.all([
+    agentService.approveAction(exec.pendingId),
+    agentService.approveAction(exec.pendingId)
+  ]);
+
+  const countAfter = db.getReminders().length;
+  assert.equal(countAfter, countBefore + 1, 'Concurrent approval must execute action at most once');
+  assert.ok(res1.success && res2.success);
+});
+
+test('S28. Composite token with base64url underscores is correctly parsed and verified', async () => {
+  db.resetStore();
+  const { parseAndVerifyPendingToken, createPendingToken } = await import('../utils/tokenUtils.js');
+  
+  const token = createPendingToken('exec-101', 'pending-101', 'action-101', {
+    toolName: 'createReminder',
+    description: 'Test _ underscore _ description',
+    params: { title: 'Test _ Underscores' }
+  });
+
+  const parsed = parseAndVerifyPendingToken(token);
+  assert.ok(parsed);
+  assert.equal(parsed.execId, 'exec-101');
+  assert.equal(parsed.proposedAction.toolName, 'createReminder');
+});
+

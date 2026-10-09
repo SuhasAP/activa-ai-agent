@@ -7,8 +7,8 @@ export const agentController = {
       const { goal } = req.body;
       if (!goal || typeof goal !== 'string' || !goal.trim()) {
         return res.status(400).json({
-          error: "Goal input is required.",
-          message: "Please enter a valid goal for ACTIVA."
+          error: true,
+          message: "Goal input is required and cannot be empty."
         });
       }
       const result = await agentService.processGoal(goal.trim());
@@ -22,7 +22,7 @@ export const agentController = {
     try {
       const { pendingId } = req.body;
       if (!pendingId) {
-        return res.status(400).json({ error: "pendingId is required for approval." });
+        return res.status(400).json({ error: true, message: "pendingId is required for approval." });
       }
       const result = await agentService.approveAction(pendingId);
       return res.json(result);
@@ -35,7 +35,7 @@ export const agentController = {
     try {
       const { pendingId } = req.body;
       if (!pendingId) {
-        return res.status(400).json({ error: "pendingId is required for rejection." });
+        return res.status(400).json({ error: true, message: "pendingId is required for rejection." });
       }
       const result = await agentService.rejectAction(pendingId);
       return res.json(result);

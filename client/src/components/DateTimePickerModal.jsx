@@ -1,7 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, X, AlertCircle, Check, Bell, Shield } from 'lucide-react';
 
 export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const today = new Date();
@@ -149,7 +160,12 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="glass-card rounded-2xl p-6 border border-slate-700 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-reminder-modal-title"
+        className="glass-card rounded-2xl p-6 border border-slate-700 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative"
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
@@ -158,13 +174,16 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
               <Bell className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Create New Reminder</h3>
+              <h3 id="create-reminder-modal-title" className="text-lg font-bold text-white">
+                Create New Reminder
+              </h3>
               <p className="text-xs text-slate-400">Set interactive date, time, and guardrails</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800"
+            aria-label="Close modal"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -174,10 +193,11 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
           
           {/* Title Input */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label htmlFor="reminder-title-input" className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Reminder Title
             </label>
             <input
+              id="reminder-title-input"
               type="text"
               required
               value={title}
@@ -224,10 +244,10 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
               <div className="flex items-center justify-between mb-3 text-xs font-bold text-white font-mono">
                 <span>{monthYearLabel}</span>
                 <div className="flex gap-1">
-                  <button type="button" onClick={prevMonth} className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
+                  <button type="button" onClick={prevMonth} aria-label="Previous month" className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button type="button" onClick={nextMonth} className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
+                  <button type="button" onClick={nextMonth} aria-label="Next month" className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -306,6 +326,8 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
               {/* Hour Input */}
               <div className="flex flex-col items-center">
                 <input
+                  id="reminder-hour-input"
+                  aria-label="Hour (1 to 12)"
                   type="number"
                   min="1"
                   max="12"
@@ -319,7 +341,9 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
                   }}
                   className="w-16 bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-base font-mono font-bold text-white focus:outline-none focus:border-amber-500"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 uppercase font-semibold">Hour</span>
+                <label htmlFor="reminder-hour-input" className="text-[10px] text-slate-400 mt-1 uppercase font-semibold">
+                  Hour
+                </label>
               </div>
 
               <span className="text-xl font-mono text-slate-400 font-bold">:</span>
@@ -327,6 +351,8 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
               {/* Minute Input */}
               <div className="flex flex-col items-center">
                 <input
+                  id="reminder-minute-input"
+                  aria-label="Minute (0 to 59)"
                   type="number"
                   min="0"
                   max="59"
@@ -340,7 +366,9 @@ export default function DateTimePickerModal({ isOpen, onClose, onCreateReminder 
                   }}
                   className="w-16 bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-base font-mono font-bold text-white focus:outline-none focus:border-amber-500"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 uppercase font-semibold">Minute</span>
+                <label htmlFor="reminder-minute-input" className="text-[10px] text-slate-400 mt-1 uppercase font-semibold">
+                  Minute
+                </label>
               </div>
 
               {/* AM/PM Toggle */}

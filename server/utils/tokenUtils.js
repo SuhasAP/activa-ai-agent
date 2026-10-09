@@ -32,22 +32,36 @@ export function createPendingToken(execId, basePendingId, actionId, proposedActi
 
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const hmac = crypto.createHmac('sha256', secret).update(payloadB64).digest('hex');
-  return `${basePendingId}_${payloadB64}_${hmac}`;
+  return `${basePendingId}.${payloadB64}.${hmac}`;
 }
 
 export function parseAndVerifyPendingToken(token) {
-  if (!token || typeof token !== 'string' || !token.startsWith('pending-') || !token.includes('_')) {
+  if (!token || typeof token !== 'string' || !token.startsWith('pending-')) {
     return null;
   }
 
-  const parts = token.split('_');
-  if (parts.length !== 3) {
+  let basePendingId, payloadB64, signature;
+
+  if (token.includes('.')) {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    [basePendingId, payloadB64, signature] = parts;
+  } else if (token.includes('_')) {
+    const firstUnderscore = token.indexOf('_');
+    const lastUnderscore = token.lastIndexOf('_');
+    if (firstUnderscore === -1 || lastUnderscore === -1 || firstUnderscore === lastUnderscore) {
+      return null;
+    }
+    basePendingId = token.substring(0, firstUnderscore);
+    payloadB64 = token.substring(firstUnderscore + 1, lastUnderscore);
+    signature = token.substring(lastUnderscore + 1);
+  } else {
     return null;
   }
 
-  const basePendingId = parts[0];
-  const payloadB64 = parts[1];
-  const signature = parts[2];
+  if (!basePendingId || !payloadB64 || !signature) {
+    return null;
+  }
 
   const secret = getServerSecret();
   const expectedHmac = crypto.createHmac('sha256', secret).update(payloadB64).digest('hex');

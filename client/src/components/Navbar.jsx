@@ -45,7 +45,7 @@ export default function Navbar({ onResetData }) {
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -78,7 +78,8 @@ export default function Navbar({ onResetData }) {
             <button
               onClick={handleReset}
               title="Reset seeded demo data"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition"
+              aria-label="Reset demo data to initial state"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Data</span>
